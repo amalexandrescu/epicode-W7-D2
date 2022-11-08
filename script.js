@@ -35,6 +35,9 @@ for (let btn of viewButtonList) {
   // console.log(btn);
   btn.setAttribute("data-toggle", "modal");
   btn.setAttribute("data-target", "#staticBackdrop");
+
+  // const modalBody = document.querySelector("div.modal-body");
+  // modalBody.innerText = `${btn}`;
 }
 
 const searchButton = document.querySelector("#button-addon2");
@@ -80,6 +83,22 @@ searchButton.addEventListener("click", () => {
             let imgTag = cardList[i].querySelector("img");
             imgTag.src = `${photosArr[i].src.medium}`;
           }
+          viewButtonList[i].addEventListener("click", () => {
+            const modalBody = document.querySelector("div.modal-body");
+            modalBody.innerHTML = "";
+
+            let closestCardContainer = viewButtonList[i].closest("div.card");
+            let imageCard = closestCardContainer.querySelector("img");
+            if (!imageCard.classList.contains("visibility")) {
+              const newImageForModal = document.createElement("img");
+              newImageForModal.src = `${photosArr[i].src.medium}`;
+              newImageForModal.classList.add("modal-img");
+              modalBody.appendChild(newImageForModal);
+            } else {
+              modalBody.innerText =
+                "The image is not visible right now. If you want to be displayed in the modal, just close the modal and click on Hide button, then retry";
+            }
+          });
         }
       });
   }
@@ -134,6 +153,22 @@ loadImagesButton.addEventListener("click", () => {
           let imgTag = cardList[i].querySelector("img");
           imgTag.src = `${photosArr[i].src.medium}`;
         }
+
+        viewButtonList[i].addEventListener("click", () => {
+          const modalBody = document.querySelector("div.modal-body");
+          modalBody.innerHTML = "";
+          let closestCardContainer = viewButtonList[i].closest("div.card");
+          let imageCard = closestCardContainer.querySelector("img");
+          if (!imageCard.classList.contains("visibility")) {
+            const newImageForModal = document.createElement("img");
+            newImageForModal.src = `${photosArr[i].src.medium}`;
+            newImageForModal.classList.add("modal-img");
+            modalBody.appendChild(newImageForModal);
+          } else {
+            modalBody.innerText =
+              "The image is not visible right now. If you want to be displayed in the modal, just close the modal and click on Hide button, then retry";
+          }
+        });
       }
     });
 });
@@ -172,6 +207,21 @@ secondaryLoadButton.addEventListener("click", () => {
           let imgTag = cardList[i].querySelector("img");
           imgTag.src = `${photosArr[i].src.medium}`;
         }
+        viewButtonList[i].addEventListener("click", () => {
+          const modalBody = document.querySelector("div.modal-body");
+          modalBody.innerHTML = "";
+          let closestCardContainer = viewButtonList[i].closest("div.card");
+          let imageCard = closestCardContainer.querySelector("img");
+          if (!imageCard.classList.contains("visibility")) {
+            const newImageForModal = document.createElement("img");
+            newImageForModal.src = `${photosArr[i].src.medium}`;
+            newImageForModal.classList.add("modal-img");
+            modalBody.appendChild(newImageForModal);
+          } else {
+            modalBody.innerText =
+              "The image is not visible right now. If you want to be displayed in the modal, just close the modal and click on Hide button, then retry";
+          }
+        });
       }
     });
 });
@@ -183,20 +233,18 @@ const editButtonList = document.querySelectorAll(
 for (let btn of editButtonList) {
   btn.innerText = "Hide";
   btn.addEventListener("click", () => {
-    let cardParent =
-      btn.parentElement.parentElement.parentElement.parentElement;
-    if (cardParent.querySelector("svg")) {
-      cardParent.querySelector("svg").remove();
-    } else if (cardParent.querySelector("img")) {
-      cardParent.querySelector("img").remove();
-    }
+    let closestCardContainer = btn.closest("div.card");
+    let imageCard = closestCardContainer.querySelector("img");
+    // console.log(closest);
+    // let cardParent =
+    //   btn.parentElement.parentElement.parentElement.parentElement.parentElement
+    //     .parentElement;
+    // console.log(cardParent);
+    // if (cardParent.querySelector("svg")) {
+    //   cardParent.querySelector("svg").remove();
+    // } else if (cardParent.querySelector("img")) {
+    //   cardParent.querySelector("img").remove();
+    // }
+    imageCard.classList.toggle("visibility");
   });
 }
-
-// for (let btn of viewButtonList) {
-//   // console.log(btn);
-//   btn.addEventListener("click", () => {
-//     const modalBody = document.querySelector("div.modal-body");
-//     modalBody.innerText = "Hello";
-//   });
-// }

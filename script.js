@@ -10,35 +10,104 @@ const jumbotronToAppend = document.querySelector(
 );
 
 const newSearchButtonContainer = document.createElement("div");
-// newSearchButtonContainer.innerHTML = `<button type="button" class="btn btn-primary">Search</button>`;
 newSearchButtonContainer.innerHTML = `<div class="input-group mb-3">
 <input type="text" class="form-control" placeholder="Type what kind of image you want to display" aria-label="Recipient's username" aria-describedby="button-addon2">
 <div class="input-group-append">
-  <button class="btn btn-outline-secondary" type="button" id="button-addon2">Button</button>
+  <button class="btn btn-outline-secondary" type="button" id="button-addon2">Search</button>
 </div>
 </div>`;
 
 jumbotronToAppend.appendChild(newSearchButtonContainer);
 
-`<div class="input-group mb-3">
-  <input type="text" placeholder="Recipient's username">
-  <div class="input-group-append">
-    <button class="btn btn-outline-secondary" type="button" id="button-addon2">Search</button>
-  </div>
-</div>`;
+const smallTagList = document.querySelectorAll("div.card-body small");
+
+let cardList = document.querySelectorAll(".card");
 
 const viewButtonList = document.querySelectorAll(
   "div.card-body div.btn-group button:first-child"
 );
 
 for (let btn of viewButtonList) {
-  // console.log(btn);
   btn.setAttribute("data-toggle", "modal");
   btn.setAttribute("data-target", "#staticBackdrop");
-
-  // const modalBody = document.querySelector("div.modal-body");
-  // modalBody.innerText = `${btn}`;
 }
+
+let alertNode = document.querySelector(".alert");
+
+const fetchFunction = (query) => {
+  cardList = document.querySelectorAll(".card");
+  let howManyPhotos = cardList.length;
+
+  fetch(
+    `https://api.pexels.com/v1/search?query=[${query}]&per_page=${howManyPhotos}`,
+    options
+  )
+    .then((response) => {
+      return response.json();
+    })
+    .then((result) => {
+      let photosArr = result.photos;
+      console.log(result.photos.url);
+
+      //setting a timer for the alert by removing d-none class before calling the timer
+      //and then putting it back when the timer is out
+
+      alertNode.innerText = `${photosArr.length} images loaded`;
+      alertNode.classList.remove("d-none");
+      setTimeout(() => {
+        alertNode.classList.add("d-none");
+      }, 5000);
+
+      //checking if there is an svg and if so, create an img tag and then remove the svg
+      //on the else statement, we don't have an svg, so we just create an img tag
+      //the reason why we don't have an svg is because we have already removed them
+      //by pressing one of the buttons on the page: load, secondary or search
+      for (let i = 0; i < photosArr.length; i++) {
+        let svgTag = cardList[i].querySelector("svg");
+        if (svgTag) {
+          smallTagList[i].innerText = photosArr[i].id;
+          let parentNode = cardList[i];
+          let newImgNode = document.createElement("div");
+          newImgNode.innerHTML = `<img
+        src="${photosArr[i].src.medium}"
+        style="width: 100%; height: 225px; object-fit: cover;"
+        class="card-img-top"
+      />`;
+
+          parentNode.insertBefore(newImgNode, svgTag);
+          svgTag.remove();
+        } else {
+          smallTagList[i].innerText = photosArr[i].id;
+          let parentNode = cardList[i];
+          let imgTag = cardList[i].querySelector("img");
+          imgTag.src = `${photosArr[i].src.medium}`;
+        }
+
+        //linking the view button from every card to the modal, so when you press view button
+        //you put in the modal the image of the card
+        //unless it it hidden and then a message appears in the modal
+
+        viewButtonList[i].addEventListener("click", () => {
+          const modalBody = document.querySelector("div.modal-body");
+          modalBody.innerHTML = "";
+          let closestCardContainer = viewButtonList[i].closest("div.card");
+          let imageCard = closestCardContainer.querySelector("img");
+          if (!imageCard.classList.contains("visibility")) {
+            const newImageForModal = document.createElement("img");
+            newImageForModal.src = `${photosArr[i].src.medium}`;
+            newImageForModal.classList.add("modal-img");
+            modalBody.appendChild(newImageForModal);
+          } else {
+            modalBody.innerText =
+              "The image is not visible right now. If you want to be displayed in the modal, just close the modal and click on Hide button, then retry";
+          }
+        });
+      }
+    })
+    .catch((err) => console.error(err));
+};
+
+//adding an event listener on search button
 
 const searchButton = document.querySelector("#button-addon2");
 const input = document.querySelector("input");
@@ -50,181 +119,27 @@ searchButton.addEventListener("click", () => {
     cardList = document.querySelectorAll(".card");
     let howManyPhotos = cardList.length;
 
-    fetch(
-      `https://api.pexels.com/v1/search?query=[${currentSearch}]&per_page=${howManyPhotos}`,
-      options
-    )
-      .then((response) => {
-        return response.json();
-      })
-      .then((result) => {
-        let photosArr = result.photos;
-        alert(`${photosArr.length} photos loaded`);
-        console.log(result.photos);
-        //put the code for changing the photos in the cards
-
-        for (let i = 0; i < photosArr.length; i++) {
-          let svgTag = cardList[i].querySelector("svg");
-          if (svgTag) {
-            smallTagList[i].innerText = photosArr[i].id;
-            let parentNode = cardList[i];
-            let newImgNode = document.createElement("div");
-            newImgNode.innerHTML = `<img
-          src="${photosArr[i].src.medium}"
-          style="width: 100%; height: 225px; object-fit: cover;"
-          class="card-img-top"
-        />`;
-
-            parentNode.insertBefore(newImgNode, svgTag);
-            svgTag.remove();
-          } else {
-            smallTagList[i].innerText = photosArr[i].id;
-            let parentNode = cardList[i];
-            let imgTag = cardList[i].querySelector("img");
-            imgTag.src = `${photosArr[i].src.medium}`;
-          }
-          viewButtonList[i].addEventListener("click", () => {
-            const modalBody = document.querySelector("div.modal-body");
-            modalBody.innerHTML = "";
-
-            let closestCardContainer = viewButtonList[i].closest("div.card");
-            let imageCard = closestCardContainer.querySelector("img");
-            if (!imageCard.classList.contains("visibility")) {
-              const newImageForModal = document.createElement("img");
-              newImageForModal.src = `${photosArr[i].src.medium}`;
-              newImageForModal.classList.add("modal-img");
-              modalBody.appendChild(newImageForModal);
-            } else {
-              modalBody.innerText =
-                "The image is not visible right now. If you want to be displayed in the modal, just close the modal and click on Hide button, then retry";
-            }
-          });
-        }
-      });
+    fetchFunction(currentSearch);
   }
-
   input.value = "";
 });
 
+//adding an event listener on loadImages button
+
 const loadImagesButton = document.querySelector("#load-images");
-const secondaryLoadButton = document.querySelector("#secondary-load");
-
-const smallTagList = document.querySelectorAll("div.card-body small");
-
-let cardList = document.querySelectorAll(".card");
-console.log(cardList.length);
-
 loadImagesButton.addEventListener("click", () => {
-  cardList = document.querySelectorAll(".card");
-  let howManyPhotos = cardList.length;
-
-  fetch(
-    `https://api.pexels.com/v1/search?query=[Dogs]&per_page=${howManyPhotos}`,
-    options
-  )
-    .then((response) => {
-      // console.log("json", response);
-      return response.json();
-      // console.log(response.photos);
-    })
-    .then((result) => {
-      let photosArr = result.photos;
-      console.log(result.photos.url);
-
-      alert(`${photosArr.length} photos loaded`);
-
-      for (let i = 0; i < photosArr.length; i++) {
-        let svgTag = cardList[i].querySelector("svg");
-        if (svgTag) {
-          smallTagList[i].innerText = photosArr[i].id;
-          let parentNode = cardList[i];
-          let newImgNode = document.createElement("div");
-          newImgNode.innerHTML = `<img
-        src="${photosArr[i].src.medium}"
-        style="width: 100%; height: 225px; object-fit: cover;"
-        class="card-img-top"
-      />`;
-
-          parentNode.insertBefore(newImgNode, svgTag);
-          svgTag.remove();
-        } else {
-          smallTagList[i].innerText = photosArr[i].id;
-          let parentNode = cardList[i];
-          let imgTag = cardList[i].querySelector("img");
-          imgTag.src = `${photosArr[i].src.medium}`;
-        }
-
-        viewButtonList[i].addEventListener("click", () => {
-          const modalBody = document.querySelector("div.modal-body");
-          modalBody.innerHTML = "";
-          let closestCardContainer = viewButtonList[i].closest("div.card");
-          let imageCard = closestCardContainer.querySelector("img");
-          if (!imageCard.classList.contains("visibility")) {
-            const newImageForModal = document.createElement("img");
-            newImageForModal.src = `${photosArr[i].src.medium}`;
-            newImageForModal.classList.add("modal-img");
-            modalBody.appendChild(newImageForModal);
-          } else {
-            modalBody.innerText =
-              "The image is not visible right now. If you want to be displayed in the modal, just close the modal and click on Hide button, then retry";
-          }
-        });
-      }
-    });
+  fetchFunction("dogs");
 });
 
+//adding an event listener on the secondary button
+
+const secondaryLoadButton = document.querySelector("#secondary-load");
 secondaryLoadButton.addEventListener("click", () => {
-  cardList = document.querySelectorAll(".card");
-  let howManyPhotos = cardList.length;
-
-  fetch(
-    `https://api.pexels.com/v1/search?query=[Rabbits]&per_page=${howManyPhotos}`,
-    options
-  )
-    .then((response) => response.json())
-    .then((result) => {
-      let photosArr = result.photos;
-
-      alert(`${photosArr.length} photos loaded`);
-
-      for (let i = 0; i < photosArr.length; i++) {
-        let svgTag = cardList[i].querySelector("svg");
-        if (svgTag) {
-          smallTagList[i].innerText = photosArr[i].id;
-          let parentNode = cardList[i];
-          let newImgNode = document.createElement("div");
-          newImgNode.innerHTML = `<img
-        src="${photosArr[i].src.medium}"
-        style="width: 100%; height: 225px; object-fit: cover;"
-        class="card-img-top"
-      />`;
-
-          parentNode.insertBefore(newImgNode, svgTag);
-          svgTag.remove();
-        } else {
-          smallTagList[i].innerText = photosArr[i].id;
-          let parentNode = cardList[i];
-          let imgTag = cardList[i].querySelector("img");
-          imgTag.src = `${photosArr[i].src.medium}`;
-        }
-        viewButtonList[i].addEventListener("click", () => {
-          const modalBody = document.querySelector("div.modal-body");
-          modalBody.innerHTML = "";
-          let closestCardContainer = viewButtonList[i].closest("div.card");
-          let imageCard = closestCardContainer.querySelector("img");
-          if (!imageCard.classList.contains("visibility")) {
-            const newImageForModal = document.createElement("img");
-            newImageForModal.src = `${photosArr[i].src.medium}`;
-            newImageForModal.classList.add("modal-img");
-            modalBody.appendChild(newImageForModal);
-          } else {
-            modalBody.innerText =
-              "The image is not visible right now. If you want to be displayed in the modal, just close the modal and click on Hide button, then retry";
-          }
-        });
-      }
-    });
+  fetchFunction("rabbit");
 });
+
+//Changing the edit buttons with "hide" buttons and
+//and toggling the visibility class so the image can dissapear on click on hide button
 
 const editButtonList = document.querySelectorAll(
   "div.card-body div.btn-group button:nth-child(2)"
@@ -235,16 +150,26 @@ for (let btn of editButtonList) {
   btn.addEventListener("click", () => {
     let closestCardContainer = btn.closest("div.card");
     let imageCard = closestCardContainer.querySelector("img");
-    // console.log(closest);
-    // let cardParent =
-    //   btn.parentElement.parentElement.parentElement.parentElement.parentElement
-    //     .parentElement;
-    // console.log(cardParent);
-    // if (cardParent.querySelector("svg")) {
-    //   cardParent.querySelector("svg").remove();
-    // } else if (cardParent.querySelector("img")) {
-    //   cardParent.querySelector("img").remove();
-    // }
     imageCard.classList.toggle("visibility");
   });
 }
+
+//Creating the carousel:
+
+fetch(
+  `https://api.pexels.com/v1/search?query=[Forest]&per_page=4&orientation=landscape`,
+  options
+)
+  .then((response) => response.json())
+  .then((result) => {
+    const innerCarouselContainer = document.querySelector(".carousel-inner");
+    let photosArr = result.photos;
+    for (let i = 0; i < photosArr.length; i++) {
+      innerCarouselContainer.innerHTML += `<div class="carousel-item ${
+        i === 0 ? "active" : ""
+      }">
+      <img class="d-block w-100" src="${photosArr[i].src.large}" alt="" />
+      </div>`;
+    }
+  })
+  .catch((err) => console.error(err));
